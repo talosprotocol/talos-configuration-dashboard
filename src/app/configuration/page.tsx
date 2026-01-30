@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { ConfigurationAdapter, Draft, HistoryItem, ValidationResult } from "../../adapters/configuration-adapter";
-import { VERSION as REQUIRED_VERSION } from "@talos-protocol/contracts";
+import { VERSION as REQUIRED_VERSION } from "@talosprotocol/contracts";
 import yaml from "js-yaml";
 import { AlertCircle, Check, FileJson, History, Save, Shield, Upload, Lock } from "lucide-react";
 
