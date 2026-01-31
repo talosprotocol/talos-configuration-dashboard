@@ -1,4 +1,5 @@
 # Agent workspace: site/configuration-dashboard
+> **Project**: site/configuration-dashboard
 
 This folder contains agent-facing context, tasks, workflows, and planning artifacts for this submodule.
 
