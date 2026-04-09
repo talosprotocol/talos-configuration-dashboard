@@ -1,18 +1,24 @@
 "use client";
 
 import { useMerchants } from "@/view-models/use-merchants";
+import { JsonObject } from "@/domain/entities";
 import { ArrowUpRight, Shield, ShoppingCart, Users, Activity, ExternalLink, ArrowDownRight, RefreshCw, AlertCircle } from "lucide-react";
+
+function getErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : 'Policy update failed';
+}
 
 export default function OverviewPage() {
   const { merchants, isLoading, error, updatePolicy } = useMerchants();
 
   const handleUpdatePolicy = async (merchantId: string) => {
+    const payload: JsonObject = { max_spend: 6000 };
     // Demo update
     try {
-      await updatePolicy(merchantId, "v1.1", { max_spend: 6000 });
+      await updatePolicy(merchantId, "v1.1", payload);
       alert("Policy updated and audited!");
-    } catch (e: any) {
-      alert(e.message);
+    } catch (error) {
+      alert(getErrorMessage(error));
     }
   };
 

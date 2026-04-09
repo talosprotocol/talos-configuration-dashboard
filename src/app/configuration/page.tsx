@@ -2,9 +2,21 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { ConfigurationAdapter, Draft, HistoryItem, ValidationResult } from "../../adapters/configuration-adapter";
+import { JsonObject } from "../../domain/entities";
 import { VERSION as REQUIRED_VERSION } from "@talosprotocol/contracts";
 import yaml from "js-yaml";
 import { AlertCircle, Check, FileJson, History, Save, Shield, Upload, Lock } from "lucide-react";
+
+function getErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
+function asJsonObject(value: unknown): JsonObject {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error("Configuration must be a YAML object");
+  }
+  return value as JsonObject;
+}
 
 export default function ConfigurationPage() {
   const [adapter] = useState(() => new ConfigurationAdapter());
@@ -38,33 +50,33 @@ export default function ConfigurationPage() {
       setHistory(hist.items);
 
       // 3. Load latest config into editor if empty
-      if (hist.items.length > 0 && !configText) {
+      if (hist.items.length > 0) {
           try {
-             const latest = JSON.parse(hist.items[0].config_json);
-             setConfigText(yaml.dump(latest));
-          } catch(e) {
-             console.error("Failed to parse history config", e);
+             const latest = asJsonObject(JSON.parse(hist.items[0].config_json) as unknown);
+             setConfigText((current) => current || yaml.dump(latest));
+          } catch (error) {
+             console.error("Failed to parse history config", error);
           }
       }
-    } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : String(e);
+    } catch (error: unknown) {
+      const msg = getErrorMessage(error);
       setError(msg);
     }
-  }, [adapter, configText]);
+  }, [adapter]);
 
   useEffect(() => {
-    loadData();
+    void loadData();
   }, [loadData]);
 
   async function handleValidate() {
     setIsLoading(true);
     setValidationResult(null);
     try {
-      const parsed = yaml.load(configText);
+      const parsed = asJsonObject(yaml.load(configText));
       const res = await adapter.validate(parsed);
       setValidationResult(res);
-    } catch (e: unknown) {
-        const msg = e instanceof Error ? e.message : String(e);
+    } catch (error: unknown) {
+        const msg = getErrorMessage(error);
       setValidationResult({ valid: false, errors: [msg] });
     } finally {
       setIsLoading(false);
@@ -75,12 +87,12 @@ export default function ConfigurationPage() {
     setIsLoading(true);
     setError(null);
     try {
-      const parsed = yaml.load(configText);
+      const parsed = asJsonObject(yaml.load(configText));
       const res = await adapter.createDraft(parsed, "Draft via Dashboard", PRINCIPAL_ID);
       setDraft(res);
       alert("Draft Created!");
-    } catch (e: unknown) {
-        const msg = e instanceof Error ? e.message : String(e);
+    } catch (error: unknown) {
+        const msg = getErrorMessage(error);
       setError(msg);
     } finally {
       setIsLoading(false);
@@ -95,9 +107,9 @@ export default function ConfigurationPage() {
       await adapter.publishDraft(draft.draft_id, PRINCIPAL_ID);
       alert("Published Successfully!");
       setDraft(null);
-      loadData(); // Refresh history
-    } catch (e: unknown) {
-        const msg = e instanceof Error ? e.message : String(e);
+      void loadData(); // Refresh history
+    } catch (error: unknown) {
+        const msg = getErrorMessage(error);
       setError(msg);
     } finally {
       setIsLoading(false);

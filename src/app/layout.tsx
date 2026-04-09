@@ -1,19 +1,8 @@
 import type { Metadata } from "next";
-import { Inter, Outfit } from "next/font/google";
 import "./globals.css";
 import { Sidebar } from "@/components/layout/sidebar";
 import { TopBar } from "@/components/layout/top-bar";
 import { cn } from "@/lib/utils";
-
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-});
-
-const outfit = Outfit({
-  variable: "--font-outfit",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   title: "Talos Security Console",
@@ -29,8 +18,6 @@ export default function RootLayout({
     <html lang="en" className="dark">
       <body
         className={cn(
-          inter.variable,
-          outfit.variable,
           "font-sans antialiased bg-slate-950 text-slate-100 min-h-screen flex"
         )}
       >

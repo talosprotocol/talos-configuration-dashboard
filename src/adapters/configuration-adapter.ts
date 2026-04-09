@@ -1,4 +1,9 @@
+import { JsonObject } from "../domain/entities";
 
+type ErrorResponse = {
+  detail?: string;
+  error?: string;
+};
 
 
 export interface ValidationResult {
@@ -7,14 +12,14 @@ export interface ValidationResult {
 }
 
 export interface NormalizeResult {
-  config: any;
+  config: JsonObject;
   digest: string;
 }
 
 export interface Draft {
   draft_id: string;
   config_digest: string;
-  config: any;
+  config: JsonObject;
   note?: string;
   created_at: string;
   principal: string;
@@ -53,7 +58,7 @@ export class ConfigurationAdapter {
     return res.json();
   }
 
-  async validate(config: unknown): Promise<ValidationResult> {
+  async validate(config: JsonObject): Promise<ValidationResult> {
     const res = await fetch(`${this.baseUrl}/validate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -66,7 +71,7 @@ export class ConfigurationAdapter {
     return { valid: res.ok };
   }
 
-  async normalize(config: unknown): Promise<NormalizeResult> {
+  async normalize(config: JsonObject): Promise<NormalizeResult> {
     const res = await fetch(`${this.baseUrl}/normalize`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -76,7 +81,7 @@ export class ConfigurationAdapter {
     return res.json();
   }
 
-  async createDraft(config: unknown, note: string, principal: string): Promise<Draft> {
+  async createDraft(config: JsonObject, note: string, principal: string): Promise<Draft> {
     // Generate a robust idempotency key
     const idemKey = crypto.randomUUID();
     
@@ -91,8 +96,8 @@ export class ConfigurationAdapter {
     });
     
     if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.detail || 'Failed to create draft');
+        const err = await res.json().catch(() => null) as ErrorResponse | null;
+        throw new Error(err?.detail || 'Failed to create draft');
     }
     return res.json();
   }
@@ -110,8 +115,8 @@ export class ConfigurationAdapter {
     });
 
     if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.detail || 'Failed to publish draft');
+        const err = await res.json().catch(() => null) as ErrorResponse | null;
+        throw new Error(err?.detail || 'Failed to publish draft');
     }
     return res.json();
   }

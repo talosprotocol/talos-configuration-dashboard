@@ -1,12 +1,19 @@
 import { NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
+import { AuditEvent, JsonObject } from '@/domain/entities';
+
+type PolicyUpdateRequest = {
+  merchantId?: string;
+  policyVersion?: string;
+  payload?: JsonObject;
+};
 
 // In-memory audit log for prototype
-const AUDIT_LOG: any[] = [];
+const AUDIT_LOG: AuditEvent[] = [];
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
+    const body = await request.json() as PolicyUpdateRequest;
     const { merchantId, policyVersion, payload } = body;
 
     // 1. Mock AuthZ check
@@ -16,15 +23,15 @@ export async function POST(request: Request) {
     }
 
     // 2. Validation (Schema Versioning Invariant)
-    if (!policyVersion || !payload) {
-      return NextResponse.json({ error: 'Missing version or payload' }, { status: 400 });
+    if (!merchantId || !policyVersion || !payload) {
+      return NextResponse.json({ error: 'Missing merchant, version, or payload' }, { status: 400 });
     }
 
     // 3. Emit Audit Event (Production Requirement)
     const auditEvent = {
         id: uuidv4(),
         userId: 'admin-1', // Inferred from token
-        action: 'POLICY_UPDATE',
+        action: 'POLICY_UPDATE' as const,
         entityId: merchantId,
         details: { 
             version: policyVersion, 
@@ -43,7 +50,7 @@ export async function POST(request: Request) {
         message: 'Policy update staged and audited' 
     });
 
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
